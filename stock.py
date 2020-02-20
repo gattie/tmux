@@ -5,8 +5,7 @@ stock_symbol = sys.argv[1]
 
 result = requests.get(
     ("https://query1.finance.yahoo.com/v7/finance/quote?lang=en-US&region=US&"
-    "corsDomain=finance.yahoo.com&symbols={}").format(stock_symbol)
-    )
+    "corsDomain=finance.yahoo.com&symbols={}").format(stock_symbol))
 
 quote_response = result.json()['quoteResponse']['result'][0]
 

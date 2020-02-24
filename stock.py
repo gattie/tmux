@@ -1,6 +1,5 @@
 import requests
 import argparse
-from pprint import pprint as pp
 
 def color_coding(color_codes):
     if color_codes == 'tmux':

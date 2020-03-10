@@ -40,7 +40,7 @@ def weather_icon(weather_category):
         804: b'\xe2\x98\x81\xef\xb8\x8f', # Overcast Clouds
     }
 
-    value = icons.get(weather_category)
+    value = icons.get(weather_category).decode('utf-8')
 
     return value
 
@@ -171,10 +171,9 @@ def main():
         category, temp, wind_speed = get_weather(
             args.latitude, args.longitude, args.units)
         icon = weather_icon(category)
-        # print(icon.decode('utf-8'))
         print("{}:{}  {}°{}, {}ms".format(
             args.city,
-            icon.decode('utf-8'),
+            icon,
             round(temp),
             temp_unit,
             round(wind_speed)

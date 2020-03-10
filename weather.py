@@ -7,6 +7,15 @@ import sys
 API_KEY=""
 
 def weather_icon(weather_category):
+    """Get bytecode of emoji based on the weather category
+
+    Arguments:
+        weather_category {int} -- Weather category value provided by
+        openweathermap API.
+
+    Returns:
+        decoded bytecode -- bytecode decoded into it's utf-8 emoji
+    """
     if 200 <= weather_category <= 299:
         weather_category = 200
     elif 300 <= weather_category <= 399:
@@ -36,6 +45,27 @@ def weather_icon(weather_category):
     return value
 
 def geocode(address):
+    """ Retrieves the latitude and longitude based on the address provided
+    {'alt': {},
+     'elevation': {},
+     'latt': '38.89876',
+     'longt': '-77.03512',
+     'standard': {'addresst': 'Nw Pennsylvania Ave',
+                  'city': 'Washington',
+                  'confidence': '1',
+                  'countryname': 'United States of America',
+                  'postal': '20503',
+                  'prov': 'US',
+                  'region': 'DC',
+                  'stnumber': '1600',
+                  'zip': '20503'}}
+
+    Arguments:
+        address {string} -- Full street address
+
+    Returns:
+        tuple -- City, Latitude, and Longitude
+    """
     geo_data = requests.get("https://geocode.xyz/{}?json=1".format(
         urllib.parse.quote_plus(address)))
     geo_json = json.loads(geo_data.content)
@@ -43,7 +73,7 @@ def geocode(address):
     return geo_json['standard']['city'], geo_json['latt'], geo_json['longt']
 
 def get_weather(latitude, longitude, units):
-    """
+    """ Retrieves the weather based on the latitude and longitude provided.
     {'base': 'stations',
      'clouds': {'all': 20},
      'cod': 200,
@@ -74,6 +104,9 @@ def get_weather(latitude, longitude, units):
         latitude {[type]} -- [description]
         longitude {[type]} -- [description]
         units {[type]} -- [description]
+
+    Returns:
+        tuple -- Weather category, temperature, and wind speed
     """
     global API_KEY
     qs = {

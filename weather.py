@@ -2,6 +2,7 @@ import requests
 import argparse
 import json
 import urllib.parse
+import sys
 
 API_KEY=""
 
@@ -122,6 +123,9 @@ def main():
         default='metric',
         help="celcius or farenheit"
     )
+    if len(sys.argv)==1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
     args = parser.parse_args()
 
     temp_unit = 'C' if args.units == 'metric' else 'F'

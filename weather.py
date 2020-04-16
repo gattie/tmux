@@ -1,8 +1,14 @@
-import requests
+#!/usr/local/bin/python3
+"""Retrieves the weather for a given location
+"""
+
 import argparse
 import json
-import urllib.parse
 import sys
+import time
+import urllib.parse
+from pprint import pprint as pp
+import requests
 
 API_KEY=""
 

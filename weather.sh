@@ -58,13 +58,39 @@ weather_icon() {
   fi
 }
 
+#$ curl -s 'https://geocode.xyz/Tucson,+Arizona?json=1' | jq '.'
+#{
+#  "standard": {
+#    "stnumber": "1045",
+#    "addresst": "Arizona Ave S",
+#    "postal": {},
+#    "region": "AZ",
+#    "zip": {},
+#    "prov": "US",
+#    "city": "Tucson",
+#    "countryname": "United States of America",
+#    "confidence": "0.7"
+#  },
+#  "longt": "-110.96761",
+#  "alt": {},
+#  "elevation": {},
+#  "latt": "32.21373"
+#}
+function geocode() {
+  address=$1
+  data=$(curl -s "https://geocode.xyz/${address}?json=1")
+  echo $data
+}
+
+
 function usage() {
   cat <<EOL
   weather -c [city] -l [latitude] -L [longitude]
 
-  -c [city]      : (required) The name of the city you want to print for display purposes
-  -l [latitude]  : (required) The latitude in signed degrees format DDD.dddd
-  -L [longitude] : (required) The longitude in signed degrees format DDD.dddd
+  -a [address]   : (optional) A postal address of weather location
+  -c [city]      : (required if address isn't provided) The name of the city you want to print for display purposes
+  -l [latitude]  : (required if address isn't provided) The latitude in signed degrees format DDD.dddd
+  -L [longitude] : (required if address isn't provided) The longitude in signed degrees format DDD.dddd
   -u             : (optional) Units can be either 'metric' or 'imperial' (default: metric)
   -h             : prints this help message
 
@@ -72,11 +98,12 @@ function usage() {
 EOL
 }
 
-while getopts ":hc:l:L:u:" opt; do
+while getopts ":ha:c:l:L:u:" opt; do
   case ${opt} in
     h ) usage
         exit 0
       ;;
+    a ) ADDRESS=$OPTARG;;
     c ) CITY=$OPTARG;;
     l ) LAT=$OPTARG;;
     L ) LON=$OPTARG;;
@@ -103,6 +130,20 @@ else
   LETTER="F"
 fi
 
+if [[ -n $ADDRESS ]]
+then
+  echo "Address has been given"
+  geocoding=$(geocode "${ADDRESS}")
+  echo $geocoding
+  CITY=$(echo $geocoding | jq '.standard.city' | tr -d '"')
+  REGION=$(echo $geocoding | jq '.standard.region' | tr -d '"')
+  CITY=$(echo "${CITY}, ${REGION}")
+  LAT=$(echo $geocoding | jq '.latt' | tr -d '"')
+  LON=$(echo $geocoding | jq '.longt'| tr -d '"')
+fi
+echo $LAT
+echo $LON
+echo $CITY
 WEATHER=$(curl --silent http://api.openweathermap.org/data/2.5/weather\?lat="$LAT"\&lon="$LON"\&APPID="$API_KEY"\&units="${UNITS}")
 
 CATEGORY=$(echo "$WEATHER" | jq .weather[0].id)

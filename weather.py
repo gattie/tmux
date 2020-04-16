@@ -10,7 +10,7 @@ import urllib.parse
 from pprint import pprint as pp
 import requests
 
-API_KEY=""
+API_KEY = ""
 
 def weather_icon(weather_category):
     """Get bytecode of emoji based on the weather category
@@ -78,7 +78,7 @@ def geocode(address):
 
     return geo_json['standard']['city'], geo_json['latt'], geo_json['longt']
 
-def get_weather(latitude, longitude, units):
+def get_weather(latitude, longitude, units, forecast):
     """ Retrieves the weather based on the latitude and longitude provided.
     {'base': 'stations',
      'clouds': {'all': 20},
@@ -115,24 +115,48 @@ def get_weather(latitude, longitude, units):
         tuple -- Weather category, temperature, and wind speed
     """
     global API_KEY
-    qs = {
+    query_string = {
         'lat': latitude,
         'lon': longitude,
         'APPID': API_KEY,
         'units': units
     }
-    qs = urllib.parse.urlencode(qs)
-    url = "http://api.openweathermap.org/data/2.5/weather?{}".format(qs)
+    query_string = urllib.parse.urlencode(query_string)
+    url = "http://api.openweathermap.org/data/2.5/onecall?{}".format(query_string)
     weather = requests.get(url)
     weather_json = json.loads(weather.content)
-    category = weather_json['weather'][0]['id']
-    temp = weather_json['main']['temp']
-    wind_speed = weather_json['wind']['speed']
+    category = weather_json['current']['weather'][0]['id']
+    temp = weather_json['current']['temp']
+    wind_speed = weather_json['current']['wind_speed']
 
-    return category, temp, wind_speed
+    forecast_result = get_forecast(weather_json) if forecast else None
+
+    return category, temp, wind_speed, forecast_result
+
+def get_forecast(weather_json):
+    """Returns next 3 day forecast
+
+    Arguments:
+        weather_json {json object} -- JSON result from openweathermap onecall API
+
+    Returns:
+        list -- List of next 3 days with max/min temperatures and weather icon
+    """
+    forecast = []
+    for day in range(1, 4):
+        timestamp = time.localtime(weather_json['daily'][day]['dt'])
+        day_of_week = time.strftime("%a", timestamp)
+        max_temp = weather_json['daily'][day]['temp']['max']
+        min_temp = weather_json['daily'][day]['temp']['min']
+        icon = weather_json['daily'][day]['weather'][0]['id']
+        forecast.append([day_of_week, max_temp, min_temp, icon])
+
+    return forecast
 
 
 def main():
+    """main function
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-c',
@@ -162,7 +186,13 @@ def main():
         default='metric',
         help="celcius or farenheit"
     )
-    if len(sys.argv)==1:
+    parser.add_argument(
+        '-f',
+        dest='forecast',
+        action='store_true',
+        help="Print a 3 day forecast in addition to current conditions"
+    )
+    if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
     args = parser.parse_args()
@@ -174,8 +204,8 @@ def main():
         print("python {} -c {} -l {} -L {}".format(
             parser.prog, city.replace(" ", "\\ "), lat, lon))
     else:
-        category, temp, wind_speed = get_weather(
-            args.latitude, args.longitude, args.units)
+        category, temp, wind_speed, forecast = get_weather(
+            args.latitude, args.longitude, args.units, args.forecast)
         icon = weather_icon(category)
         print("{}:{}  {}°{}, {}ms".format(
             args.city,
@@ -183,7 +213,12 @@ def main():
             round(temp),
             temp_unit,
             round(wind_speed)
-        ))
+        ), end=" ")
+        if args.forecast:
+            for day in forecast:
+                icon = weather_icon(day[3])
+                print("{}:{}  {}/{}".format(
+                    day[0], icon, round(day[1]), round(day[2])), end=" ")
 
 if __name__ == "__main__":
     main()

@@ -7,7 +7,7 @@ Returns:
 import sys
 from datetime import date
 from calendar import monthrange, isleap
-from time import localtime
+from time import localtime, sleep
 import argparse
 
 class Progress():
@@ -53,26 +53,38 @@ class Progress():
 
         return percent_of_day
 
-    def work_progress(self):
+    def work_progress(self, start_hour=9, end_hour=17):
         """[summary]
 
         Returns:
             [type]: [description]
         """
-        start_seconds = 9*60*60
-        end_seconds = 17*60*60
+        start_seconds = start_hour*60*60
+        end_seconds = end_hour*60*60
+        work_seconds = end_seconds - start_seconds
         total_sec = self.localtime.tm_hour * 60 * 60 + \
                     self.localtime.tm_min * 60 + \
                     self.localtime.tm_sec
         if total_sec < start_seconds:
             total_sec = 0
         elif total_sec > end_seconds:
-            total_sec = end_seconds
+            total_sec = work_seconds
         else:
             total_sec = total_sec - start_seconds
-        percent_of_work = total_sec/end_seconds
+        percent_of_work = total_sec/work_seconds
 
         return percent_of_work
+
+    def twenty_20_twenty(self):
+        next_break = self.localtime.tm_min % 20
+        if next_break == 0:
+            for i in range(20, 0, -1):
+                sys.stdout.write("\r")
+                sys.stdout.write("{:2d}s - Break time! Look 20 ft away".format(i))
+                sys.stdout.flush()
+                sleep(1)
+        else:
+            print("Next break in {} minutes".format(20 - next_break))
 
 def output_progress(progress_percent, time_range):
     """[summary]
@@ -102,6 +114,8 @@ def progress_parser():
                         help="return the progress of the current year")
     parser.add_argument("-w", "--work", action="store_true",
                         help="return the progress of the work day")
+    parser.add_argument("-20", "--twenty", action="store_true",
+                        help="Indicates if you should take a break")
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -121,6 +135,8 @@ def progress_parser():
     if args.work:
         work_progress = progress.work_progress()
         output_progress(work_progress, "Work")
+    if args.twenty:
+        progress.twenty_20_twenty()
 
 if __name__ == '__main__':
     progress_parser()

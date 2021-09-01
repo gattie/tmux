@@ -16,10 +16,13 @@ def color_coding(color_codes):
     return red, green, black
 
 def get_quote(stock_symbol):
+    headers = {
+            'User-Agent': 'curl/7.54.0'
+            }
     result = requests.get(
         ("https://query1.finance.yahoo.com/v7/finance/quote?lang=en-US&"
         "region=US&corsDomain=finance.yahoo.com&symbols={}").format(
-            stock_symbol))
+            stock_symbol), headers=headers)
 
     return result.json()['quoteResponse']['result'][0]
 
@@ -70,7 +73,7 @@ def main():
         color_black,
         name,
         color_value_change,
-        quote_response['regularMarketPrice'],
+        round(quote_response['regularMarketPrice'], 2),
         market_change,
         percent_change
         ))

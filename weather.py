@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 """Retrieves the weather for a given location
 """
 
@@ -183,7 +183,10 @@ def main():
             round(temp),
             temp_unit,
             round(wind_speed)
-        ))
+        ), end=" ")
 
 if __name__ == "__main__":
-    main()
+    if API_KEY:
+        main()
+    else:
+        print("API_KEY value is not set")

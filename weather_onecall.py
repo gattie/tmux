@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 """Retrieves the weather for a given location
 """
 
@@ -122,7 +122,8 @@ def get_weather(latitude, longitude, units, forecast):
         'units': units
     }
     query_string = urllib.parse.urlencode(query_string)
-    url = "http://api.openweathermap.org/data/2.5/onecall?{}".format(query_string)
+    url = "http://api.openweathermap.org/data/2.5/onecall?{}".format(
+        query_string)
     weather = requests.get(url)
     weather_json = json.loads(weather.content)
     category = weather_json['current']['weather'][0]['id']
@@ -137,13 +138,14 @@ def get_forecast(weather_json):
     """Returns next 3 day forecast
 
     Arguments:
-        weather_json {json object} -- JSON result from openweathermap onecall API
+        weather_json {json object} -- JSON result from openweathermap onecall
+        API
 
     Returns:
         list -- List of next 3 days with max/min temperatures and weather icon
     """
     forecast = []
-    for day in range(1, 4):
+    for day in range(0, 3):
         timestamp = time.localtime(weather_json['daily'][day]['dt'])
         day_of_week = time.strftime("%a", timestamp)
         max_temp = weather_json['daily'][day]['temp']['max']
@@ -207,18 +209,22 @@ def main():
         category, temp, wind_speed, forecast = get_weather(
             args.latitude, args.longitude, args.units, args.forecast)
         icon = weather_icon(category)
-        print("{}:{}  {}°{}, {}ms".format(
-            args.city,
-            icon,
-            round(temp),
-            temp_unit,
-            round(wind_speed)
-        ), end=" ")
         if args.forecast:
             for day in forecast:
                 icon = weather_icon(day[3])
-                print("{}:{}  {}/{}".format(
+                print("| {}:{}  {}/{}".format(
                     day[0], icon, round(day[1]), round(day[2])), end=" ")
+        else:
+            print("{}:{}  {}°{}, {}ms".format(
+                args.city,
+                icon,
+                round(temp),
+                temp_unit,
+                round(wind_speed)
+            ), end=" ")
 
 if __name__ == "__main__":
-    main()
+    if API_KEY:
+        main()
+    else:
+        print("API_KEY value is not set")
